@@ -1,5 +1,5 @@
-from .model import SkinnyModel
+from .model import FraudDetectionModel
 
 
 def load_model():
-    return SkinnyModel()
+    return FraudDetectionModel()
